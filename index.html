@@ -1,1 +1,199 @@
-<!DOCTYPE html><html><head><title>PolyIntel</title></head><body><h1>Test</h1></body></html>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PolyIntel Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+  :root {--bg:#070a0f;--bg2:#0d1117;--border:#1e2d3d;--green:#00ff88;--red:#ff3b5c;--yellow:#ffd60a;--cyan:#00d4ff;--text:#e2e8f0;--muted:#4a6080;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Space Mono',monospace;font-size:12px;overflow-x:hidden;}
+  .header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+  .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--green);letter-spacing:2px;text-transform:uppercase;}
+  .logo span{color:var(--text);}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block;margin-right:6px;}
+  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,255,136,0.4);}50%{opacity:.8;box-shadow:0 0 0 4px rgba(0,255,136,0);}}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border-bottom:1px solid var(--border);}
+  .stat-box{background:var(--bg);padding:14px 16px;text-align:center;}
+  .stat-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+  .stat-value{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;}
+  .stat-value.green{color:var(--green);}.stat-value.red{color:var(--red);}
+  .stat-sub{font-size:10px;color:var(--muted);margin-top:2px;}
+  .main{display:grid;grid-template-columns:320px 1fr 280px;gap:1px;background:var(--border);min-height:calc(100vh - 100px);}
+  .panel{background:var(--bg);overflow:hidden;}
+  .panel-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);}
+  .panel-title{font-family:'Syne',sans-serif;font-weight:700;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
+  .panel-content{padding:12px;overflow-y:auto;max-height:calc(100vh - 150px);}
+  .activity-item{border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:8px;background:var(--bg2);position:relative;overflow:hidden;transition:all .2s;cursor:pointer;}
+  .activity-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);}
+  .activity-item.sell::before{background:var(--red);}
+  .activity-item:hover{border-color:var(--green);background:rgba(0,255,136,.03);}
+  .act-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .act-action{font-size:9px;padding:2px 6px;border-radius:2px;font-weight:700;letter-spacing:1px;}
+  .act-action.buy{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3);}
+  .act-action.sell{background:rgba(255,59,92,.1);color:var(--red);border:1px solid rgba(255,59,92,.3);}
+  .act-value{font-weight:700;font-size:12px;}
+  .act-value.pos{color:var(--green);}.act-value.neg{color:var(--red);}
+  .act-market{font-size:11px;color:var(--text);line-height:1.4;margin-bottom:4px;}
+  .act-meta{display:flex;gap:10px;font-size:10px;color:var(--muted);}
+  .act-side{padding:1px 5px;border-radius:2px;font-size:9px;font-weight:700;}
+  .act-side.yes{background:rgba(0,255,136,.1);color:var(--green);}
+  .act-side.no{background:rgba(255,59,92,.1);color:var(--red);}
+  .tag{font-size:9px;padding:1px 5px;border-radius:2px;letter-spacing:1px;font-weight:700;text-transform:uppercase;}
+  .tag.live{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.2);}
+  .tag.ai{background:rgba(0,212,255,.1);color:var(--cyan);border:1px solid rgba(0,212,255,.2);}
+  .refresh-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px;transition:color .2s;}
+  .refresh-btn:hover{color:var(--green);}
+  .refresh-btn.spinning{animation:spin 1s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+  .intel-item{border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:8px;background:var(--bg2);}
+  .score-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+  .score-fill{height:100%;border-radius:2px;}
+  .score-fill.high{background:var(--green);}.score-fill.medium{background:var(--yellow);}.score-fill.low{background:var(--red);}
+  .ai-box{border:1px solid rgba(0,212,255,.2);border-radius:4px;padding:14px;margin-bottom:8px;background:rgba(0,212,255,.03);position:relative;}
+  .ai-box::before{content:'AI ANALYSIS';position:absolute;top:-6px;left:10px;background:var(--bg);padding:0 6px;font-size:8px;color:var(--cyan);letter-spacing:2px;}
+  .ai-text{font-size:11px;line-height:1.7;color:var(--text);}
+  .portfolio-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+  .p-market{font-size:11px;color:var(--text);max-width:200px;line-height:1.3;}
+  .p-pnl{font-size:12px;font-weight:700;}
+  .p-pnl.pos{color:var(--green);}.p-pnl.neg{color:var(--red);}
+  .dot-loader span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:dotBounce 1.2s infinite ease-in-out;margin:0 2px;}
+  .dot-loader span:nth-child(2){animation-delay:.2s;}.dot-loader span:nth-child(3){animation-delay:.4s;}
+  @keyframes dotBounce{0%,80%,100%{transform:scale(.6);opacity:.5;}40%{transform:scale(1);opacity:1;}}
+  .empty-state{text-align:center;color:var(--muted);padding:30px 10px;font-size:11px;line-height:1.8;}
+  .news-ticker{background:var(--bg2);border-top:1px solid var(--border);padding:8px 14px;overflow:hidden;white-space:nowrap;}
+  .ticker-content{display:inline-block;animation:ticker 60s linear infinite;font-size:11px;color:var(--muted);}
+  .ticker-content span{color:var(--green);margin-right:40px;}
+  @keyframes ticker{from{transform:translateX(100vw);}to{transform:translateX(-100%);}}
+  .scrollbar-hide{scrollbar-width:none;}.scrollbar-hide::-webkit-scrollbar{display:none;}
+  .center{grid-column:2;display:grid;grid-template-rows:1fr 1fr;}
+  .btn{padding:6px 12px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;border-radius:2px;letter-spacing:1px;transition:all .2s;}
+  .btn:hover{border-color:var(--green);color:var(--green);}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">POLY<span>INTEL</span> <span style="color:var(--muted);font-size:10px;font-weight:400">v4.0</span></div>
+  <div style="display:flex;gap:20px;align-items:center">
+    <span><span class="status-dot"></span><span class="tag live">LIVE</span></span>
+    <span style="color:var(--muted);font-size:10px">CAR: <span style="color:var(--cyan)">0x7c3d...5c6b</span></span>
+    <span style="color:var(--green);font-size:13px;font-weight:700" id="clock">--:--:--</span>
+  </div>
+</div>
+<div class="stats-row">
+  <div class="stat-box"><div class="stat-label">Car PnL Oggi</div><div class="stat-value green">+$7.8K</div><div class="stat-sub">stamattina</div></div>
+  <div class="stat-box"><div class="stat-label">Car PnL Marzo</div><div class="stat-value green">+$166K</div><div class="stat-sub">2026</div></div>
+  <div class="stat-box"><div class="stat-label">Tuo Balance</div><div class="stat-value green">$72</div><div class="stat-sub">USDC disponibili</div></div>
+  <div class="stat-box"><div class="stat-label">Posizioni Aperte</div><div class="stat-value">2</div><div class="stat-sub">Iran NO + Netanyahu</div></div>
+</div>
+<div class="main">
+  <div class="panel">
+    <div class="panel-header"><span class="panel-title">⚡ Car Activity</span><div style="display:flex;gap:8px;align-items:center"><span class="tag live">30s</span><button class="refresh-btn" id="refresh-car" onclick="loadCarActivity()">↻</button></div></div>
+    <div class="panel-content scrollbar-hide" id="car-activity"><div class="empty-state"><div class="dot-loader"><span></span><span></span><span></span></div><div style="margin-top:8px">Caricando...</div></div></div>
+  </div>
+  <div class="panel center">
+    <div style="border-bottom:1px solid var(--border);overflow:hidden">
+      <div class="panel-header"><span class="panel-title">🎯 AI Intelligence</span><div style="display:flex;gap:8px;align-items:center"><span class="tag ai">Claude</span><button class="refresh-btn" id="refresh-intel" onclick="runIntelligence()">↻</button></div></div>
+      <div class="panel-content scrollbar-hide" id="intelligence-panel"><div class="empty-state"><div class="dot-loader"><span></span><span></span><span></span></div><div style="margin-top:8px">Analisi AI...</div></div></div>
+    </div>
+    <div>
+      <div class="panel-header"><span class="panel-title">💼 Il Tuo Portfolio</span><span class="tag live">LIVE</span></div>
+      <div class="panel-content scrollbar-hide">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px">
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px;border-radius:4px;text-align:center"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">BALANCE</div><div style="font-size:18px;font-weight:700;color:var(--green);font-family:Syne,sans-serif">$72</div><div style="font-size:9px;color:var(--muted)">USDC</div></div>
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px;border-radius:4px;text-align:center"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">IN POSIZIONE</div><div style="font-size:18px;font-weight:700;color:var(--text);font-family:Syne,sans-serif">$74</div><div style="font-size:9px;color:var(--muted)">valore</div></div>
+          <div style="background:var(--bg2);border:1px solid var(--border);padding:10px;border-radius:4px;text-align:center"><div style="font-size:9px;color:var(--muted);margin-bottom:4px">PnL TOTALE</div><div style="font-size:18px;font-weight:700;color:var(--red);font-family:Syne,sans-serif">-$2.3</div><div style="font-size:9px;color:var(--muted)">-3%</div></div>
+        </div>
+        <div class="portfolio-item">
+          <div><div class="p-market">Will the Iranian regime fall by June 30?</div><div style="margin-top:4px"><span class="act-action sell" style="font-size:9px;padding:1px 5px">NO</span> <span style="font-size:10px;color:var(--muted)">91 shares @ 78¢</span></div></div>
+          <div style="text-align:right"><div class="p-pnl neg">-$0.45</div><div style="font-size:10px;color:var(--muted)">$71 valore</div></div>
+        </div>
+        <div class="portfolio-item">
+          <div><div class="p-market">Netanyahu out by June 30?</div><div style="margin-top:4px"><span class="act-action buy" style="font-size:9px;padding:1px 5px">YES</span> <span style="font-size:10px;color:var(--muted)">33 shares @ 10¢</span></div></div>
+          <div style="text-align:right"><div class="p-pnl neg">-$1.8</div><div style="font-size:10px;color:var(--muted)">$3.2 valore</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="panel-header"><span class="panel-title">📡 Mercati Caldi</span><button class="refresh-btn" id="refresh-signals" onclick="loadSignals()">↻</button></div>
+    <div class="panel-content scrollbar-hide" id="signals-panel"><div class="empty-state"><div class="dot-loader"><span></span><span></span><span></span></div><div style="margin-top:8px">Scansione...</div></div></div>
+  </div>
+</div>
+<div class="news-ticker"><div class="ticker-content" id="ticker">Caricando news...</div></div>
+<script>
+function updateClock(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('it-IT');}
+setInterval(updateClock,1000);updateClock();
+async function loadCarActivity(){
+  const btn=document.getElementById('refresh-car');btn.classList.add('spinning');
+  try{
+    const r=await fetch('https://data-api.polymarket.com/activity?user=0x7c3db723f1d4d8cb9c550095203b686cb11e5c6b&limit=15');
+    const data=await r.json();
+    const panel=document.getElementById('car-activity');
+    if(!data||!data.length){panel.innerHTML='<div class="empty-state">Nessuna attività recente</div>';return;}
+    panel.innerHTML=data.map(item=>{
+      const isBuy=(item.type||'').toUpperCase()==='BUY';
+      const value=parseFloat(item.usdcSize||item.size||0);
+      const price=parseFloat(item.price||0)*100;
+      const outcome=item.outcome||item.side||'';
+      const market=item.title||item.market||'Mercato';
+      const time=item.timestamp?new Date(item.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
+      const slug=item.slug||'';
+      const url=slug?`https://polymarket.com/event/${slug}`:'https://polymarket.com';
+      return `<div class="activity-item ${isBuy?'':'sell'}" onclick="window.open('${url}','_blank')">
+        <div class="act-top"><span class="act-action ${isBuy?'buy':'sell'}">${isBuy?'+ BUY':'− SELL'}</span><span class="act-value ${isBuy?'neg':'pos'}">${isBuy?'-':'+'}$${value.toFixed(0)}</span></div>
+        <div class="act-market">${market.substring(0,65)}${market.length>65?'...':''}</div>
+        <div class="act-meta"><span class="act-side ${outcome.toLowerCase()==='yes'?'yes':'no'}">${outcome||'N/A'}</span><span>${price.toFixed(1)}¢</span><span>${time}</span></div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('car-activity').innerHTML=`<div class="empty-state">Errore: ${e.message}</div>`;}
+  btn.classList.remove('spinning');
+}
+async function loadSignals(){
+  const btn=document.getElementById('refresh-signals');btn.classList.add('spinning');
+  try{
+    const r=await fetch('https://gamma-api.polymarket.com/markets?limit=50&active=true&closed=false');
+    const markets=await r.json();
+    const hot=markets.filter(m=>{
+      const v=parseFloat(m.volume||0);
+      const p=parseFloat((m.outcomePrices||'["0.5"]').replace(/"/g,'').split(',')[0]);
+      return v>50000&&p>0.05&&p<0.95;
+    }).sort((a,b)=>parseFloat(b.volume24hr||0)-parseFloat(a.volume24hr||0)).slice(0,8);
+    document.getElementById('signals-panel').innerHTML=hot.map(m=>{
+      const price=parseFloat((m.outcomePrices||'["0.5"]').replace(/"/g,'').split(',')[0]);
+      const vol=parseFloat(m.volume||0);
+      const score=Math.min(95,Math.max(10,(parseFloat(m.volume24hr||0)/vol)*500+30));
+      const sc=score>70?'high':score>40?'medium':'low';
+      const slug=m.marketSlug||m.slug||'';
+      const url=slug?`https://polymarket.com/event/${slug}`:'https://polymarket.com';
+      return `<div class="intel-item" style="cursor:pointer" onclick="window.open('${url}','_blank')">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span style="font-size:9px;color:var(--muted);width:24px">${Math.round(score)}</span>
+          <div class="score-bar"><div class="score-fill ${sc}" style="width:${score}%"></div></div>
+          <span style="font-size:9px;padding:1px 6px;border-radius:2px;font-weight:700;${price<0.5?'background:rgba(255,59,92,.1);color:var(--red);border:1px solid rgba(255,59,92,.3)':'background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3)'}">${price<0.5?'NO':'YES'}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text);line-height:1.4;margin-bottom:6px">${(m.question||'').substring(0,70)}${(m.question||'').length>70?'...':''}</div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted)"><span>Vol: $${(vol/1000).toFixed(0)}K</span><span style="color:${price<0.3||price>0.7?'var(--yellow)':'var(--muted)'}">${(price*100).toFixed(1)}¢</span></div>
+      </div>`;
+    }).join('');
+  }catch(e){document.getElementById('signals-panel').innerHTML='<div class="empty-state">Errore</div>';}
+  btn.classList.remove('spinning');
+}
+async function runIntelligence(){
+  const btn=document.getElementById('refresh-intel');btn.classList.add('spinning');
+  const panel=document.getElementById('intelligence-panel');
+  panel.innerHTML='<div class="ai-box"><div style="display:flex;align-items:center;gap:8px;color:var(--cyan);font-size:11px"><div class="dot-loader"><span></span><span></span><span></span></div><span>Analisi AI...</span></div></div>';
+  try{
+    const response=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:`Sei un esperto di Polymarket. Oggi: ${new Date().toLocaleDateString('it-IT')}. Trova 2-3 opportunità concrete basate su eventi geopolitici attuali (Iran, Medio Oriente, Trump). Per ognuna: MERCATO, DIREZIONE, TESI 2 righe, CONFIDENZA. In italiano.`}]})});
+    const data=await response.json();
+    const text=data.content?.[0]?.text||'Nessuna analisi';
+    panel.innerHTML=`<div class="ai-box"><div class="ai-text">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong style="color:var(--green)">$1</strong>')}</div></div><div style="font-size:9px;color:var(--muted);text-align:right;margin-top:6px">${new Date().toLocaleTimeString('it-IT')}</div>`;
+  }catch(e){panel.innerHTML='<div class="ai-box"><div class="ai-text" style="color:var(--muted)">AI non disponibile al momento.</div></div>';}
+  btn.classList.remove('spinning');
+}
+document.getElementById('ticker').innerHTML=['🔴 Iran: tensioni con USA nel Golfo Persico','🟡 Trump: negoziati ceasefire in corso','🟢 Car (@CarOnPolymarket): +$7.8K stamattina','🔴 Medio Oriente: situazione instabile','🟢 Polymarket: volume totale $51B'].map(n=>`<span>▶</span> ${n} &nbsp;&nbsp;&nbsp;`).join('');
+(async()=>{await loadCarActivity();await loadSignals();await runIntelligence();setInterval(loadCarActivity,30000);setInterval(loadSignals,300000);})();
+</script>
+</body>
+</html>
