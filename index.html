@@ -140,7 +140,7 @@ async function loadCarActivity(){
       const market=item.title||item.market||'Mercato';
       const time=item.timestamp?new Date(item.timestamp).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
       const slug=item.slug||'';
-      const url=slug?`https://polymarket.com/event/${slug}`:'https://polymarket.com';
+      const url=slug?`https://polymarket.com/event/${slug.replace(/-\d+$/,'')}`:'https://polymarket.com';
       return `<div class="activity-item ${isBuy?'':'sell'}" onclick="window.open('${url}','_blank')">
         <div class="act-top"><span class="act-action ${isBuy?'buy':'sell'}">${isBuy?'+ BUY':'− SELL'}</span><span class="act-value ${isBuy?'neg':'pos'}">${isBuy?'-':'+'}$${value.toFixed(0)}</span></div>
         <div class="act-market">${market.substring(0,65)}${market.length>65?'...':''}</div>
@@ -166,7 +166,7 @@ async function loadSignals(){
       const score=Math.min(95,Math.max(10,(parseFloat(m.volume24hr||0)/vol)*500+30));
       const sc=score>70?'high':score>40?'medium':'low';
       const slug=m.marketSlug||m.slug||'';
-      const url=slug?`https://polymarket.com/event/${slug}`:'https://polymarket.com';
+      const url=slug?`https://polymarket.com/event/${slug.replace(/-\d+$/,'')}`:'https://polymarket.com';
       return `<div class="intel-item" style="cursor:pointer" onclick="window.open('${url}','_blank')">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <span style="font-size:9px;color:var(--muted);width:24px">${Math.round(score)}</span>
